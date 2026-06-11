@@ -1,5 +1,6 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import { Buffer } from 'buffer';
 import './index.css';
 import './bootstrap.scss';
 import App from './App.js';
@@ -7,6 +8,8 @@ import GlobalErrorBoundary from './GlobalErrorBoundary.js';
 import reportWebVitals from './reportWebVitals.js';
 import { AudioPlaybackContextProvider } from './utils/audioData.js';
 import { initPlugins } from './pluginStore';
+
+globalThis.Buffer = Buffer;
 
 // polyfills
 if (!Blob.prototype.arrayBuffer) {
@@ -24,15 +27,14 @@ if (typeof TouchEvent === 'undefined') {
   );
 }
 
-ReactDOM.render(
+createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <GlobalErrorBoundary>
       <AudioPlaybackContextProvider>
         <App />
       </AudioPlaybackContextProvider>
     </GlobalErrorBoundary>
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
 
 initPlugins();

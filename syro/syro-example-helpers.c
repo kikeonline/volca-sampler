@@ -182,7 +182,7 @@ static bool setup_file_sample(uint8_t *src, uint32_t size,
       for (ch = 0; ch < num_of_ch; ch++) {
         dat = ((int8_t *)poss)[sample_byte - 1];
         for (sbyte = 1; sbyte < sample_byte; sbyte++) {
-          dat <<= 8;
+          dat *= 256;
           dat |= poss[sample_byte - 1 - sbyte];
         }
         poss += sample_byte;

@@ -1,11 +1,13 @@
 const test = require('tape');
 const express = require('express');
 const path = require('path');
-const { transform: transformCjsToEsm } = require('cjstoesm');
 const puppeteer = require('puppeteer');
 const child_process = require('child_process');
 const fs = require('fs').promises;
 const mkdirp = require('mkdirp');
+const transformCjsToEsmPromise = import('cjstoesm').then(
+  ({ transform }) => transform
+);
 
 console.log('Building necessary files...');
 child_process.execSync(
@@ -21,9 +23,20 @@ child_process.execSync(path.join(__dirname, 'build-test-executable.sh'), {
 console.log('Files built.\n');
 
 const testPort = 5432;
+const browserProtocolTimeout = 10 * 60 * 1000;
 const moduleCache = {};
 const moduleMocks = {
-  localforage: 'export default { createInstance: () => ({}) };',
+  localforage: `
+export default {
+  createInstance: () => ({
+    getItem: async () => null,
+    iterate: async () => {},
+    keys: async () => [],
+    removeItem: async () => {},
+    setItem: async (_key, value) => value,
+  }),
+};
+  `,
   react: `
 export const createContext = () => {};
 export const createElement = () => {};
@@ -51,7 +64,7 @@ function getTestServer() {
     res.send(`<!DOCTYPE html>`);
   });
   testServer.use(express.static(path.join(__dirname, '..', 'public')));
-  testServer.get('/node_modules/:namespace/:dependency?', (req, res) => {
+  testServer.get('/node_modules/:namespace{/:dependency}', (req, res) => {
     const dependencyName = req.params.dependency
       ? `${req.params.namespace}/${req.params.dependency}`
       : req.params.namespace;
@@ -83,6 +96,7 @@ function getTestServer() {
         return moduleCache[resolvedPath];
       }
       console.log(`Fetching node module [TRANSFORMING]... ${dependencyName}`);
+      const transformCjsToEsm = await transformCjsToEsmPromise;
       const {
         files: [{ text }],
       } = await transformCjsToEsm({
@@ -104,14 +118,19 @@ function getTestServer() {
   return testServer.listen(testPort);
 }
 
+const packageLock = require('../package-lock.json');
 const importMap = {
-  imports: Object.keys(require('../package-lock.json').dependencies).reduce(
-    (imports, dependencyName) => {
+  imports: Object.keys(packageLock.packages)
+    .filter(
+      (packagePath) =>
+        packagePath.startsWith('node_modules/') &&
+        !packagePath.slice('node_modules/'.length).includes('/node_modules/')
+    )
+    .map((packagePath) => packagePath.slice('node_modules/'.length))
+    .reduce((imports, dependencyName) => {
       imports[dependencyName] = `/node_modules/${dependencyName}`;
       return imports;
-    },
-    {}
-  ),
+    }, {}),
 };
 
 /**
@@ -121,55 +140,95 @@ const importMap = {
  */
 async function forEachBrowser({ scripts, modules }, callback, t) {
   const testServer = getTestServer();
-  // TODO: support firefox when named import maps can work
-  for (const product of ['chrome' /*, 'firefox'*/]) {
-    // TODO: find another way to do this (needed for Drone at the moment
-    // because we run the Docker container as root)
-    const browser = await puppeteer.launch({ product, args: ['--no-sandbox'] });
-    const page = await browser.newPage();
-    await page.goto(`http://localhost:${testPort}`);
-    // allow importing node modules by name (non-relative) in the browser
-    page.addScriptTag({
-      type: 'importmap',
-      content: JSON.stringify(importMap),
-    });
-    // include node module polyfills in browser
-    await page.evaluate(async () => {
-      window.global = window;
-      const bufferModule = await import('buffer');
-      // let module finish executing
-      await Promise.resolve();
-      window.Buffer = bufferModule.Buffer;
-    });
-    for (const script of scripts || []) {
-      await page.addScriptTag({ url: script });
+  try {
+    // TODO: support firefox when named import maps can work
+    for (const product of ['chrome' /*, 'firefox'*/]) {
+      // TODO: find another way to do this (needed for Drone at the moment
+      // because we run the Docker container as root)
+      const browser = await puppeteer.launch({
+        args: ['--no-sandbox'],
+        protocolTimeout: browserProtocolTimeout,
+      });
+      try {
+        const page = await browser.newPage();
+        page.on('console', (message) => {
+          if (message.type() === 'error') {
+            console.error(`[browser] ${message.text()}`);
+          }
+        });
+        page.on('pageerror', (error) => {
+          console.error(`[browser] ${error.stack || error.message}`);
+        });
+        await page.goto(`http://localhost:${testPort}`);
+        await page.exposeFunction('logInNodeJs', (...args) =>
+          console.log(...args)
+        );
+        await page.evaluate(() => {
+          const NativeWorker = window.Worker;
+          window.Worker = class WorkerWithErrorLogging extends NativeWorker {
+            constructor(...args) {
+              super(...args);
+              this.addEventListener('error', (event) => {
+                logInNodeJs(
+                  `Worker error: ${event.message} (${event.filename}:${event.lineno}:${event.colno})`
+                );
+              });
+            }
+          };
+        });
+        // allow importing node modules by name (non-relative) in the browser
+        await page.addScriptTag({
+          type: 'importmap',
+          content: JSON.stringify(importMap),
+        });
+        // include node module polyfills in browser
+        await page.evaluate(async () => {
+          window.global = window;
+          const bufferModule = await import('buffer');
+          // let module finish executing
+          await Promise.resolve();
+          window.Buffer = bufferModule.Buffer;
+        });
+        for (const script of scripts || []) {
+          await page.addScriptTag({ url: script });
+        }
+        for (const module of modules || []) {
+          await page.evaluate(async ({ url, globalName }) => {
+            window[globalName] = await import(url);
+          }, module);
+        }
+        // forward console logs to node https://stackoverflow.com/a/73964712
+        await page.evaluate(() => {
+          Object.defineProperty(console, 'log', {
+            get() {
+              return logInNodeJs;
+            },
+          });
+        });
+        let testRanWithoutErrors = true;
+        try {
+          await callback(page);
+        } catch (err) {
+          console.error(err);
+          console.error(`Above error occurred for "${product}" browser`);
+          testRanWithoutErrors = false;
+        }
+        t.assert(testRanWithoutErrors, 'Test runs without errors.');
+      } finally {
+        await browser.close();
+      }
     }
-    for (const module of modules || []) {
-      await page.evaluate(async ({ url, globalName }) => {
-        window[globalName] = await import(url);
-      }, module);
-    }
-    // forward console logs to node https://stackoverflow.com/a/73964712
-    await page.exposeFunction('logInNodeJs', (...args) => console.log(...args));
-    await page.evaluate(() => {
-      Object.defineProperty(console, 'log', {
-        get() {
-          return logInNodeJs;
-        },
+  } finally {
+    await new Promise((resolve, reject) => {
+      testServer.close((error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
       });
     });
-    let testRanWithoutErrors = true;
-    try {
-      await callback(page);
-    } catch (err) {
-      console.error(err);
-      console.error(`Above error occurred for "${product}" browser`);
-      testRanWithoutErrors = false;
-    }
-    t.assert(testRanWithoutErrors, 'Test runs without errors.');
-    await browser.close();
   }
-  testServer.close();
 }
 
 /**
@@ -471,6 +530,7 @@ test('getSyroSampleBuffer', async (t) => {
         const samplesForKey = key.includes('multi_')
           ? samples
           : samples.slice(0, 1);
+        console.log(`Generating WASM sample buffer (${key})...`);
         /**
          * @type {puppeteer.JSHandle<(import('../src/store').SampleContainer)[]>}
          */
@@ -509,10 +569,19 @@ test('getSyroSampleBuffer', async (t) => {
              * @type {typeof import('../src/utils/syro').getSyroSampleBuffer}
              */
             const getSyroSampleBuffer = window.getSyroSampleBuffer;
-            const { syroBuffer } = await getSyroSampleBuffer(
+            const sampleBufferPromise = getSyroSampleBuffer(
               sampleContainers,
               () => null
             ).syroBufferPromise;
+            const { syroBuffer } = await Promise.race([
+              sampleBufferPromise,
+              new Promise((_, reject) => {
+                setTimeout(
+                  () => reject(new Error('WASM sample generation timed out')),
+                  60_000
+                );
+              }),
+            ]);
             const sampleBufferContents = [...syroBuffer];
             return sampleBufferContents;
           }, sampleContainersHandle)

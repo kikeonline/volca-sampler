@@ -28,7 +28,7 @@ const Header = React.memo(
                       <polygon
                         key={i}
                         points="75,70 75,80 150,75"
-                        transform-origin="75 75"
+                        transformOrigin="75 75"
                         // @ts-ignore
                         style={{ '--rotation': `${(i * 360) / length}deg` }}
                       />

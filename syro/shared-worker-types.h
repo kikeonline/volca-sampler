@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#define ITERATION_INTERVAL 100000
+#define ITERATION_INTERVAL INT32_MAX
 
 typedef struct SampleBufferUpdate {
   void *sampleBufferPointer;

@@ -4,18 +4,16 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { styled } from 'tonami';
 import ResizeObserver from 'resize-observer-polyfill';
 
 import { GROUP_PIXEL_WIDTH } from './utils/waveform.js';
 
-const WaveformCanvas = styled.canvas({
+const canvasStyle = {
   width: '100%',
   height: '100%',
   display: 'block',
   imageRendering: 'pixelated',
-  backgroundColor: ({ $opaque }) => ($opaque ? 'white' : 'unset'),
-});
+};
 
 /**
  * @param {HTMLCanvasElement} canvas
@@ -152,7 +150,15 @@ function WaveformDisplayCanvas({
     });
     return () => cancelAnimationFrame(frame);
   }, [peaks, scaleCoefficient, lastResize]);
-  return <WaveformCanvas ref={canvasRef} $opaque={opaque} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        ...canvasStyle,
+        backgroundColor: opaque ? 'white' : 'unset',
+      }}
+    />
+  );
 }
 
 export default WaveformDisplayCanvas;

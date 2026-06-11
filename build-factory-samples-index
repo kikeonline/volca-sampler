@@ -2,20 +2,28 @@
 
 const path = require('path');
 const fs = require('fs').promises;
-const { v4: uuidv4 } = require('uuid');
-const pcmConvert = require('pcm-convert');
-/** @type {import('./src/utils/waveform.js')} */
-const { getPeaksForSamples, WAVEFORM_CACHED_WIDTH } = require('esm')(module)(
-  './src/utils/waveform.js'
-);
-/** @type {import('./src/utils/constants.js')} */
-const { SAMPLE_RATE } = require('esm')(module)('./src/utils/constants.js');
+const { randomUUID } = require('crypto');
 const { encode: encodeBase64 } = require('base64-arraybuffer');
 
 const pathPrefix = 'factory-samples';
 const factorySamplesDirLocalPath = path.join(__dirname, 'public', pathPrefix);
 
 (async () => {
+  const { createServer } = await import('vite');
+  const { default: pcmConvert } = await import('pcm-convert');
+  const vite = await createServer({
+    appType: 'custom',
+    optimizeDeps: {
+      noDiscovery: true,
+    },
+    server: {
+      middlewareMode: true,
+    },
+  });
+  const { getPeaksForSamples, WAVEFORM_CACHED_WIDTH } =
+    await vite.ssrLoadModule('/src/utils/waveformPeaks.js');
+  const { SAMPLE_RATE } = await vite.ssrLoadModule('/src/utils/constants.js');
+  await vite.close();
   /** @type {string[]} */
   const filenames = await fs.readdir(factorySamplesDirLocalPath);
   const factorySamplesIndex = (
@@ -41,7 +49,7 @@ const factorySamplesDirLocalPath = path.join(__dirname, 'public', pathPrefix);
             trim: {
               frames: [0, 0],
             },
-            id: uuidv4(),
+            id: randomUUID(),
             // track number should be stored in first two characters
             slotNumber: Number(filename.slice(0, 2)),
             // approximate date Volca Sample was released

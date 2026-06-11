@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="./favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Easily sample new sounds and send them to your KORG volca sample or volca sample 2 using this free browser tool. No software or drivers required."
+    />
+    <meta
+      name="keywords"
+      content="Volca Sample, Korg Volca Sample 2, upload samples to Volca, Volca Sample web app, send samples to Korg Volca"
+    />
+    <meta property="og:title" content="Volca Sampler" />
+    <meta
+      property="og:description"
+      content="The fastest way to load new sounds onto your KORG volca sample or volca sample 2. Record, edit, and send samples from any device."
+    />
+    <meta
+      property="og:image"
+      content="https://volcasampler.com/volca-sampler-splash.png"
+    />
+    <meta property="og:url" content="https://volcasampler.com" />
+    <meta property="og:type" content="website" />
+    <link rel="apple-touch-icon" href="./logo192.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>Volca Sampler - Easily send sounds to KORG volca sample</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Kaushan+Script&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <noscript>
+      <style>
+        :root {
+          --sidebar-width: 0px !important;
+        }
+        .SCRIPT_ONLY {
+          display: none !important;
+        }
+      </style>
+    </noscript>
+    <script>
+      const style = document.createElement('style');
+      style.innerHTML = `.NOSCRIPT { display: none !important; }`;
+      document.head.appendChild(style);
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script vite-ignore src="./syro-bindings.js"></script>
+    <script type="module" src="/src/index.js"></script>
+  </body>
+</html>

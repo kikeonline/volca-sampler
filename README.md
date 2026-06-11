@@ -1,7 +1,5 @@
 # volca-sampler
 
-[![CircleCI](https://circleci.com/gh/benwiley4000/volca-sampler/tree/master.svg?style=svg)](https://circleci.com/gh/benwiley4000/volca-sampler/tree/master)
-
 This is an app that aims to make it easy to record a sample and transfer it to the Korg Volca Sample. The functionality is inspired heavily by the [AudioPocket app for iOS](https://apps.apple.com/us/app/audiopocket-for-volca-sample/id927415821), built by Korg. Volca Sampler runs in any modern web browser, desktop or mobile and allows you to either record audio from one of your input audio devices, or import an existing audio file (WAV, MP3, OGG, etc).
 
 **Main functionality includes:**
@@ -44,7 +42,8 @@ cd ./volca-sampler
 
 Before you do anything else you will need to install some dependencies:
 
-- [Node.js](https://nodejs.org/)
+- [Node.js 24](https://nodejs.org/) (the exact supported version is in
+  [`.nvmrc`](./.nvmrc))
 - [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) (make sure `emcc` is added to your path)
 
 If you want to run the tests you'll need [GCC](https://gcc.gnu.org/install/). Or you can probably use Clang if you replace the executable name in test/build-test-executable.sh.
@@ -69,13 +68,16 @@ install the required node modules:
 
 ```console
 # From inside volca-sampler/ directory:
+nvm use
 npm install
 ```
 
-Next you'll need to build some files that will be required by the built app (they won't be used immediately but you will get errors at runtime if the files are missing):
+`npm install` automatically compiles the Syro WebAssembly bindings using
+Emscripten. You can rebuild them manually with `npm run build:bindings`.
+
+Next, build the factory sample index:
 
 ```console
-./build-bindings.sh
 ./build-factory-samples-index
 ```
 

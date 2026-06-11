@@ -1,29 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import SevenSegmentDisplay, { Digit } from 'seven-segment-display';
 import { Form, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { findDOMNode as _findDOMNode } from 'react-dom';
 import KeyboardArrowUpIcon from '@material-design-icons/svg/filled/keyboard_arrow_up.svg';
 import KeyboardArrowDownIcon from '@material-design-icons/svg/filled/keyboard_arrow_down.svg';
 import WarningIcon from '@material-design-icons/svg/filled/warning.svg';
 
+import SevenSegmentDisplay from './SevenSegmentDisplay.js';
 import classes from './SlotNumberInput.module.scss';
-
-/** @type {typeof _findDOMNode} */
-function findDOMNodeSuppressError(component) {
-  const { error } = console;
-  console.error = () => null;
-  const node = _findDOMNode(component);
-  console.error = error;
-  return node;
-}
-
-// get rid of pointless error message in local dev
-const findDOMNode =
-  process.env.NODE_ENV === 'development'
-    ? findDOMNodeSuppressError
-    : _findDOMNode;
-
-Digit.defaultProps.offOpacity = 0;
 
 /** @typedef {(slotNumber: number) => number} SlotNumberCallback */
 
@@ -318,30 +300,12 @@ const SlotNumberInput = React.memo(
                 />
                 <SevenSegmentDisplay
                   ref={
-                    /**
-                     * @param {Parameters<typeof findDOMNode>[0]} instance
-                     */
-                    (instance) => {
-                      const svg = /** @type {SVGElement} */ (
-                        findDOMNode(instance)
-                      );
+                    /** @param {SVGSVGElement | null} svg */
+                    (svg) => {
                       if (svg) {
-                        svg.querySelectorAll('circle').forEach((oldPoint) => {
-                          svg.removeChild(oldPoint);
-                        });
-                        const point = document.createElementNS(
-                          'http://www.w3.org/2000/svg',
-                          'circle'
-                        );
-                        point.classList.add(classes.point);
-                        point.setAttribute('cx', '10.7');
-                        point.setAttribute('cy', '17');
-                        point.setAttribute('r', '1');
-                        svg.appendChild(point);
-
                         digitElementsRef.current =
                           /** @type {SVGGElement[]} */ (
-                            [].slice.call(svg.querySelectorAll('g'))
+                            [].slice.call(svg.querySelectorAll('[data-digit]'))
                           )
                             // call .reverse() to get the right-most (smallest) digit first
                             .reverse()
@@ -350,9 +314,11 @@ const SlotNumberInput = React.memo(
                     }
                   }
                   // the 5 actually represents an S
-                  value={`5${String(slotNumberLocal).padStart(3, '0')}`}
-                  digitProps={{ color: 'var(--bs-primary)' }}
+                  value={`S${String(slotNumberLocal).padStart(3, '0')}`}
+                  color="var(--bs-primary)"
                   digitCount={4}
+                  decimalAfter={0}
+                  pointClassName={classes.point}
                 />
               </div>
             </OverlayTrigger>
