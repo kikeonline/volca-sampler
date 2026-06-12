@@ -1,5 +1,7 @@
 # volca-sampler
 
+<img width="1436" height="681" alt="Screenshot 2026-06-11 at 8 57 54 PM" src="https://github.com/user-attachments/assets/74ccec45-ae34-4b21-b474-ab55a44e8360" />
+
 This is an app that aims to make it easy to record a sample and transfer it to the Korg Volca Sample. The functionality is inspired heavily by the [AudioPocket app for iOS](https://apps.apple.com/us/app/audiopocket-for-volca-sample/id927415821), built by Korg. Volca Sampler runs in any modern web browser, desktop or mobile and allows you to either record audio from one of your input audio devices, or import an existing audio file (WAV, MP3, OGG, etc).
 
 **Main functionality includes:**
