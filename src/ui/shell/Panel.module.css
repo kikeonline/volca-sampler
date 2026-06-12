@@ -1,0 +1,126 @@
+.panel {
+  min-width: 0;
+  color: var(--shell-color-text, #e7ecf0);
+  background: var(--shell-color-surface, #12181e);
+  border: 1px solid var(--shell-color-border, #34404a);
+  border-radius: var(--shell-radius, 4px);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 18%);
+  overflow-wrap: anywhere;
+}
+
+.panel[data-variant="raised"] {
+  background: var(--shell-color-surface-raised, #171f26);
+  box-shadow: 0 14px 32px rgb(0 0 0 / 26%);
+}
+
+.panel[data-variant="inset"] {
+  background: var(--shell-color-surface-inset, #090d10);
+  box-shadow: inset 0 1px 10px rgb(0 0 0 / 28%);
+}
+
+.panel[data-padding="none"] {
+  padding: 0;
+}
+
+.panel[data-padding="compact"] {
+  padding: 12px;
+}
+
+.panel[data-padding="normal"] {
+  padding: 16px;
+}
+
+.sectionHeading {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--shell-color-border, #34404a);
+}
+
+.headingCopy {
+  min-width: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.eyebrow {
+  margin-bottom: 4px;
+  color: var(--shell-color-accent, #f7a629);
+  font-family: var(--shell-font-mono, monospace);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.headingTitle {
+  margin: 0;
+  color: var(--shell-color-text, #e7ecf0);
+  font-family: var(--shell-font-condensed, "Arial Narrow", sans-serif);
+  font-size: clamp(16px, 1rem + 0.35vw, 20px);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.headingDescription {
+  max-width: 68ch;
+  margin: 5px 0 0;
+  color: var(--shell-color-muted, #9aa6af);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.headingActions {
+  min-width: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.headingActions > button,
+.headingActions > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.headingActions > button:focus-visible,
+.headingActions > a:focus-visible {
+  outline: 3px solid var(--shell-color-focus, #ffbd59);
+  outline-offset: 2px;
+}
+
+@media (max-width: 479px) {
+  .sectionHeading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .headingActions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 768px) {
+  .panel[data-padding="compact"] {
+    padding: 16px;
+  }
+
+  .panel[data-padding="normal"] {
+    padding: 20px;
+  }
+}

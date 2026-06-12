@@ -5,8 +5,8 @@
 
 .qualityBitDepthWrapper {
   --collapse-buffer-x: 1rem;
-  max-width: calc(400px + var(--collapse-buffer-x) * 2);
-  margin-bottom: 1rem;
+  max-width: none;
+  margin-bottom: 0.5rem;
 
   .label {
     margin-bottom: 0;

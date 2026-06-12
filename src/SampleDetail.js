@@ -79,67 +79,111 @@ const SampleDetail = React.memo(
       [sampleCache]
     );
     return (
-      <Container fluid="sm">
-        <h2 className={classes.sampleName}>
-          <OverlayTrigger
-            delay={{ show: 400, hide: 0 }}
-            placement="top-start"
-            overlay={<Tooltip>{sample.metadata.name}</Tooltip>}
-          >
-            <span>{sample.metadata.name}</span>
-          </OverlayTrigger>
-          <SampleDetailActions
-            sampleId={sample.id}
-            name={sample.metadata.name}
-            sourceFileId={sample.metadata.sourceFileId}
-            userFileInfo={sample.metadata.userFileInfo}
-            onSampleUpdate={onSampleUpdate}
-            onSampleDuplicate={onSampleDuplicate}
-            onSampleDelete={onSampleDelete}
-          />
-        </h2>
-        <p>
-          <strong>Sampled:</strong>{' '}
-          {formatDate(new Date(sample.metadata.dateSampled))}
-          <br />
-          <strong>Updated:</strong>{' '}
-          {formatDate(new Date(sample.metadata.dateModified))}
-        </p>
-        <h4>Configure</h4>
-        <PluginsControl
-          sampleId={sample.id}
-          sampleCache={sampleCache}
-          plugins={sample.metadata.plugins}
-          pluginParamsDefs={pluginParamsDefs}
-          pluginStatusMap={pluginStatusMap}
-          isPluginManagerOpen={isPluginManagerOpen}
-          onSampleUpdate={onSampleUpdate}
-          onOpenPluginManager={onOpenPluginManager}
-          onRecheckPlugins={onRecheckPlugins}
-          onRegenerateSampleCache={onRegenerateSampleCache}
-        />
-        <QualityBitDepthControl
-          sampleId={sample.id}
-          qualityBitDepth={sample.metadata.qualityBitDepth}
-          onSampleUpdate={onSampleUpdate}
-        />
-        <PitchControl
-          sampleId={sample.id}
-          pitchAdjustment={sample.metadata.pitchAdjustment}
-          onSampleUpdate={onSampleUpdate}
-        />
-        <WaveformEdit
-          sample={sample}
-          sampleCache={sampleCache}
-          editCacheInvalidator={editCacheInvalidator}
-          onSampleUpdate={onSampleUpdate}
-        />
-        <h4>Transfer</h4>
-        <VolcaTransferControl
-          samples={sample}
-          sampleCaches={sampleCaches}
-          onSlotNumberUpdate={handleSlotNumberUpdate}
-        />
+      <Container fluid className={classes.detailContainer}>
+        <div className={classes.detailGrid}>
+          <main className={classes.editorRegion}>
+            <div className={classes.sampleEyebrow}>
+              Active sample / S.
+              {sample.metadata.slotNumber.toString().padStart(3, '0')}
+            </div>
+            <h2 className={classes.sampleName}>
+              <OverlayTrigger
+                delay={{ show: 400, hide: 0 }}
+                placement="top-start"
+                overlay={<Tooltip>{sample.metadata.name}</Tooltip>}
+              >
+                <span>{sample.metadata.name}</span>
+              </OverlayTrigger>
+              <SampleDetailActions
+                sampleId={sample.id}
+                name={sample.metadata.name}
+                sourceFileId={sample.metadata.sourceFileId}
+                userFileInfo={sample.metadata.userFileInfo}
+                onSampleUpdate={onSampleUpdate}
+                onSampleDuplicate={onSampleDuplicate}
+                onSampleDelete={onSampleDelete}
+              />
+            </h2>
+            <p className={classes.sampleDates}>
+              <strong>Sampled:</strong>{' '}
+              {formatDate(new Date(sample.metadata.dateSampled))}
+              <span aria-hidden="true"> / </span>
+              <strong>Updated:</strong>{' '}
+              {formatDate(new Date(sample.metadata.dateModified))}
+            </p>
+            <section className={classes.editorPanel}>
+              <div className={classes.editorPanelHeading}>
+                <span>Waveform / processing</span>
+                <strong>Prepare sample</strong>
+              </div>
+              <WaveformEdit
+                sample={sample}
+                sampleCache={sampleCache}
+                editCacheInvalidator={editCacheInvalidator}
+                onSampleUpdate={onSampleUpdate}
+              />
+              <div className={classes.processingGrid}>
+                <article className={classes.processingModule}>
+                  <span className={classes.moduleNumber}>01</span>
+                  <PitchControl
+                    sampleId={sample.id}
+                    pitchAdjustment={sample.metadata.pitchAdjustment}
+                    onSampleUpdate={onSampleUpdate}
+                  />
+                </article>
+                <article className={classes.processingModule}>
+                  <span className={classes.moduleNumber}>02</span>
+                  <QualityBitDepthControl
+                    sampleId={sample.id}
+                    qualityBitDepth={sample.metadata.qualityBitDepth}
+                    onSampleUpdate={onSampleUpdate}
+                  />
+                </article>
+                <article className={classes.processingModule}>
+                  <span className={classes.moduleNumber}>03</span>
+                  <PluginsControl
+                    sampleId={sample.id}
+                    sampleCache={sampleCache}
+                    plugins={sample.metadata.plugins}
+                    pluginParamsDefs={pluginParamsDefs}
+                    pluginStatusMap={pluginStatusMap}
+                    isPluginManagerOpen={isPluginManagerOpen}
+                    onSampleUpdate={onSampleUpdate}
+                    onOpenPluginManager={onOpenPluginManager}
+                    onRecheckPlugins={onRecheckPlugins}
+                    onRegenerateSampleCache={onRegenerateSampleCache}
+                  />
+                </article>
+              </div>
+            </section>
+          </main>
+          <aside className={classes.transferRegion} aria-label="Transfer deck">
+            <div className={classes.transferHeading}>
+              <div>
+                <div className={classes.transferEyebrow}>Output / SYRO</div>
+                <h3 className={classes.regionHeading}>Transfer deck</h3>
+              </div>
+              <span className={classes.readyStatus}>Ready</span>
+            </div>
+            <VolcaTransferControl
+              samples={sample}
+              sampleCaches={sampleCaches}
+              onSlotNumberUpdate={handleSlotNumberUpdate}
+            />
+            <div className={classes.preflight}>
+              <strong>Pre-flight</strong>
+              <ol>
+                <li>Connect headphone out to SYNC IN</li>
+                <li>Set a clean output volume near maximum</li>
+                <li>Close audio enhancement software</li>
+              </ol>
+            </div>
+            <p className={classes.localNote}>
+              <strong>Nothing is uploaded.</strong>
+              Audio is encoded locally in this browser.
+            </p>
+          </aside>
+        </div>
       </Container>
     );
   }

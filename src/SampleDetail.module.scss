@@ -3,9 +3,233 @@
 @import 'bootstrap/scss/mixins';
 @import 'bootstrap/scss/variables';
 
+.detailContainer {
+  max-width: none;
+  padding: 0;
+}
+
+.detailGrid {
+  display: grid;
+  gap: 0;
+}
+
+.editorRegion,
+.transferRegion,
+.editorPanel {
+  min-width: 0;
+}
+
+.editorPanel,
+.transferRegion {
+  color: var(--color-text, var(--bs-body-color));
+  background: var(--color-surface, var(--bs-body-bg));
+  border: 1px solid var(--color-border, var(--bs-border-color));
+  border-radius: var(--radius-panel, 0.25rem);
+}
+
+.editorRegion {
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+
+.editorPanel {
+  padding: 0.75rem;
+}
+
+.transferRegion {
+  align-self: start;
+  padding: 1rem 0.875rem;
+}
+
+.sampleEyebrow,
+.transferEyebrow {
+  margin-bottom: 0.35rem;
+  color: var(--color-accent, var(--bs-primary));
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.regionHeading {
+  margin: 0;
+  font-family: var(--body-font-family);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.editorPanelHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--color-border);
+
+  span {
+    color: var(--color-primary);
+    font-family: var(--mono-font-family);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.processingGrid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.processingModule {
+  position: relative;
+  min-width: 0;
+  padding: 0.8rem 0.75rem 0.25rem 2.25rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+}
+
+.moduleNumber {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.75rem;
+  color: var(--color-primary);
+  font-family: var(--mono-font-family);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.transferHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.readyStatus {
+  display: inline-flex;
+  min-height: 1.4rem;
+  align-items: center;
+  padding: 0.2rem 0.45rem;
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success) 40%, transparent);
+  border-radius: 999px;
+  font-family: var(--mono-font-family);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.preflight {
+  margin-top: 1.35rem;
+
+  > strong {
+    display: block;
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  ol {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: preflight;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    counter-increment: preflight;
+
+    &::before {
+      width: 1.6rem;
+      height: 1.6rem;
+      display: grid;
+      place-items: center;
+      content: counter(preflight);
+      color: var(--color-primary);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+      border-radius: 50%;
+      font-family: var(--mono-font-family);
+      font-size: 0.65rem;
+      font-weight: 800;
+    }
+  }
+}
+
+.sampleDates {
+  color: var(--color-text-muted, var(--bs-secondary-color));
+
+  span {
+    margin-inline: 0.4rem;
+  }
+}
+
+.localNote {
+  margin: 1rem 0 0;
+  padding-top: 1rem;
+  color: var(--color-text-muted, var(--bs-secondary-color));
+  border-top: 1px solid var(--color-border, var(--bs-border-color));
+  font-size: 0.875rem;
+
+  strong {
+    display: block;
+    color: var(--color-text);
+  }
+}
+
+@include media-breakpoint-up(md) {
+  .processingGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .processingModule:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@include media-breakpoint-up(xl) {
+  .detailGrid {
+    min-height: calc(100dvh - var(--shell-command-height, 72px));
+    grid-template-columns: minmax(32.5rem, 1fr) minmax(15.625rem, 18.25rem);
+    align-items: stretch;
+  }
+
+  .transferRegion {
+    position: sticky;
+    top: var(--shell-command-height, 72px);
+    min-height: calc(100dvh - var(--shell-command-height, 72px));
+    border-width: 0 0 0 1px;
+    border-radius: 0;
+  }
+}
+
 .sampleName {
   display: flex;
   justify-content: space-between;
+  margin-bottom: 0.25rem;
 
   @include media-breakpoint-up(lg) {
     flex-wrap: wrap;

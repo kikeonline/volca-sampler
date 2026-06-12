@@ -5,9 +5,14 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Container, Nav } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
+import LibraryIcon from '@material-design-icons/svg/filled/library_music.svg';
+import RecordIcon from '@material-design-icons/svg/filled/mic.svg';
+import PluginIcon from '@material-design-icons/svg/filled/extension.svg';
+import SettingsIcon from '@material-design-icons/svg/filled/settings.svg';
+import AddIcon from '@material-design-icons/svg/filled/add_circle_outline.svg';
+import TransferIcon from '@material-design-icons/svg/filled/sync_alt.svg';
 
-import Header from './Header.js';
 import SampleDetail from './SampleDetail.js';
 import SampleDetailReadonly from './SampleDetailReadonly.js';
 import SampleRecord from './SampleRecord.js';
@@ -26,6 +31,17 @@ import { getAudioBufferForAudioFileData } from './utils/audioData.js';
 import { newSampleName } from './utils/words.js';
 import { onTabUpdateEvent, sendTabUpdateEvent } from './utils/tabSync.js';
 import { getPluginStatus, listPluginParams } from './pluginStore.js';
+import { ThemeProvider } from './theme/index.js';
+import {
+  AppShell,
+  CommandBar,
+  Panel,
+  SectionHeading,
+  UtilityRail,
+  WorkspaceNav,
+} from './ui/shell/index.js';
+import { LibraryGrid } from './ui/library/index.js';
+import SampleBulkActions from './SampleBulkActions.js';
 
 import classes from './App.module.scss';
 import { getPlugin } from './utils/plugins.js';
@@ -34,7 +50,7 @@ const sessionStorageKey = 'focused_sample_id';
 
 /** @typedef {import('./sampleCacheStore.js').CachedInfo} CachedInfo */
 
-function App() {
+function AppContent() {
   const [userSamples, setUserSamples] = useState(
     /** @type {Map<string, SampleContainer>} */ (new Map())
   );
@@ -82,6 +98,14 @@ function App() {
         ? restoredFocusedSampleId
         : null
     )
+  );
+  const [workspace, setWorkspace] = useState(
+    /** @type {'workbench' | 'library' | 'capture' | 'about'} */ (
+      restoredFocusedSampleId ? 'workbench' : 'capture'
+    )
+  );
+  const [librarySelection, setLibrarySelection] = useState(
+    /** @type {Set<string>} */ (new Set())
   );
   const focusedSampleIdRef = useRef(focusedSampleId);
   focusedSampleIdRef.current = focusedSampleId;
@@ -236,6 +260,7 @@ function App() {
     await sample.persist();
     setUserSamples((samples) => new Map([[sample.id, sample], ...samples]));
     setFocusedSampleId(sample.id);
+    setWorkspace('workbench');
     Promise.resolve().then(() =>
       sendTabUpdateEvent('sample', [sample.id], 'create')
     );
@@ -378,7 +403,7 @@ function App() {
         bulkAddSampleCaches.map((s) => s.sampleContainer.id),
         'create'
       );
-      setSelectedMobilePage('sampleList');
+      setWorkspace('library');
     },
     []
   );
@@ -440,6 +465,7 @@ function App() {
           );
         }
         setFocusedSampleId(newSample.id);
+        setWorkspace('workbench');
       }
     },
     []
@@ -599,24 +625,23 @@ function App() {
     });
   }, []);
 
-  const [selectedMobilePage, setSelectedMobilePage] = useState(
-    /** @type {'sampleList' | 'currentSample' | 'about'} */ ('currentSample')
-  );
-
   const handleSampleSelect = useCallback(
     /**
      * @param {string | null} sampleId
      */
     (sampleId) => {
       setFocusedSampleId(sampleId);
-      setSelectedMobilePage('currentSample');
+      setWorkspace(sampleId ? 'workbench' : 'capture');
     },
     []
   );
 
-  const handleHeaderClick = useCallback(() => {
+  const handleNewSample = useCallback(() => {
     setFocusedSampleId(null);
-    setSelectedMobilePage('currentSample');
+    setWorkspace('capture');
+    requestAnimationFrame(() => {
+      document.getElementById('record-button')?.focus();
+    });
   }, []);
 
   const sample = focusedSampleId ? allSamples.get(focusedSampleId) : null;
@@ -625,6 +650,20 @@ function App() {
       (userSampleCaches.get(sample.id) ||
         factorySampleCaches.get(sample.id))) ||
     null;
+  const allSampleCaches = useMemo(
+    () => new Map([...userSampleCaches, ...factorySampleCaches]),
+    [userSampleCaches, factorySampleCaches]
+  );
+  const userSampleIds = useMemo(
+    () => new Set(userSamples.keys()),
+    [userSamples]
+  );
+  useEffect(() => {
+    setLibrarySelection(
+      (selection) =>
+        new Set([...selection].filter((sampleId) => allSamples.has(sampleId)))
+    );
+  }, [allSamples]);
 
   const [isPluginManagerOpen, setIsPluginManagerOpen] = useState(false);
   const openPluginManager = useCallback(() => setIsPluginManagerOpen(true), []);
@@ -681,69 +720,253 @@ function App() {
     };
   }, [pluginNameList]);
 
+  const navigationItems = useMemo(
+    () => [
+      {
+        id: 'samples',
+        label: 'Samples',
+        icon: <LibraryIcon />,
+      },
+      {
+        id: 'record',
+        label: 'Record',
+        icon: <RecordIcon />,
+      },
+      {
+        id: 'plugins',
+        label: 'Plugins',
+        icon: <PluginIcon />,
+      },
+      {
+        id: 'transfer',
+        label: 'Transfer',
+        icon: <TransferIcon />,
+        disabled: !sample,
+      },
+      {
+        id: 'about',
+        label: 'About',
+        icon: <SettingsIcon />,
+      },
+    ],
+    [sample]
+  );
+
+  const activeNavigationId =
+    workspace === 'capture'
+      ? 'record'
+      : workspace === 'about'
+      ? 'about'
+      : 'samples';
+  const handleNavigation = useCallback(
+    (destination) => {
+      if (destination === 'plugins') {
+        openPluginManager();
+        return;
+      }
+      if (destination === 'transfer') {
+        setWorkspace('workbench');
+        requestAnimationFrame(() => {
+          document
+            .querySelector('[aria-label="Transfer deck"]')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        return;
+      }
+      setWorkspace(
+        destination === 'record'
+          ? 'capture'
+          : destination === 'about'
+          ? 'about'
+          : 'workbench'
+      );
+    },
+    [openPluginManager]
+  );
+
+  const workspaceLabel = {
+    workbench: 'Sample preparation',
+    library: 'All samples',
+    capture: 'Record or import',
+    about: 'About and help',
+  }[workspace];
+
+  const sampleEditor =
+    !sample ? (
+      <Panel className={classes.emptyWorkbench}>
+        <SectionHeading
+          eyebrow="Workbench"
+          title="Choose a sample to prepare"
+          description="Select a sample from the bank, browse the full library, or record and import a new sound."
+        />
+        <div className={classes.emptyActions}>
+          <Button type="button" onClick={() => setWorkspace('library')}>
+            Open library
+          </Button>
+          <Button
+            type="button"
+            variant="outline-secondary"
+            onClick={handleNewSample}
+          >
+            Record or import
+          </Button>
+        </div>
+      </Panel>
+    ) : sample instanceof SampleContainer.Mutable ? (
+      <SampleDetail
+        sample={sample}
+        sampleCache={sampleCache}
+        pluginParamsDefs={pluginParamsDefs}
+        pluginStatusMap={pluginStatusMap}
+        isPluginManagerOpen={isPluginManagerOpen}
+        editCacheInvalidator={editCacheInvalidator}
+        onSampleUpdate={handleSampleUpdate}
+        onSampleDuplicate={handleSampleDuplicate}
+        onSampleDelete={handleSampleDelete}
+        onOpenPluginManager={openPluginManager}
+        onRecheckPlugins={updatePluginParamsDefs}
+        onRegenerateSampleCache={handleRegenerateSampleCache}
+      />
+    ) : (
+      <SampleDetailReadonly
+        sample={sample}
+        sampleCache={sampleCache}
+        onSampleDuplicate={handleSampleDuplicate}
+      />
+    );
+
   return (
     <div className={classes.app}>
-      <Header onHeaderClick={handleHeaderClick} />
-      <div
-        className={`${classes.mobileLayoutContainer} ${classes[selectedMobilePage]}`}
+      <AppShell
+        className={
+          workspace === 'workbench'
+            ? classes.consoleShellDense
+            : classes.consoleShell
+        }
+        commandBar={
+          <CommandBar
+            brand={
+              <button
+                className={classes.brandMark}
+                type="button"
+                aria-label="Start a new sample"
+                onClick={handleNewSample}
+              >
+                VS
+              </button>
+            }
+            title="Volca Sampler"
+            context={`Hardware utility console / ${workspaceLabel}`}
+            status={
+              <span className={classes.storageStatus}>
+                <i aria-hidden="true" />
+                Browser storage ready
+                <b aria-hidden="true" />
+                {allSamples.size} samples
+              </span>
+            }
+            actions={
+              <>
+                <button
+                  className={classes.commandButton}
+                  type="button"
+                  onClick={openPluginManager}
+                >
+                  <PluginIcon aria-hidden="true" />
+                  <span>Plugins</span>
+                </button>
+                <button
+                  className={classes.primaryCommand}
+                  type="button"
+                  onClick={handleNewSample}
+                >
+                  <AddIcon aria-hidden="true" />
+                  <span>New sample</span>
+                </button>
+              </>
+            }
+          />
+        }
+        utilityRail={
+          <UtilityRail
+            items={navigationItems}
+            activeId={activeNavigationId}
+            onNavigate={handleNavigation}
+          />
+        }
+        workspaceNav={
+          <WorkspaceNav
+            items={navigationItems}
+            activeId={activeNavigationId}
+            onNavigate={handleNavigation}
+          />
+        }
+        mainLabel={workspaceLabel}
       >
-        <div className={`${classes.sampleListSidebar} SCRIPT_ONLY`}>
-          <SampleMenu
-            loading={loadingSamples}
-            focusedSampleId={focusedSampleId}
+        {workspace === 'workbench' && (
+          <div className={classes.workbench}>
+            <Panel
+              className={classes.sampleBank}
+              padding="compact"
+              ariaLabel="Sample bank"
+            >
+              <div className={classes.bankHeading}>
+                <div>
+                  <span>Bank / Local</span>
+                  <strong>Your samples</strong>
+                </div>
+                <button type="button" onClick={() => setWorkspace('library')}>
+                  <LibraryIcon aria-hidden="true" />
+                  <span>Full library</span>
+                </button>
+              </div>
+              <SampleMenu
+                loading={loadingSamples}
+                focusedSampleId={focusedSampleId}
+                userSamples={userSamples}
+                factorySamples={factorySamples}
+                userSampleCaches={userSampleCaches}
+                factorySampleCaches={factorySampleCaches}
+                onSampleSelect={handleSampleSelect}
+                onSampleDelete={handleSampleDelete}
+              />
+            </Panel>
+            <div className={classes.editorWorkspace}>{sampleEditor}</div>
+          </div>
+        )}
+
+        {workspace === 'library' && (
+          <LibraryGrid
             userSamples={userSamples}
             factorySamples={factorySamples}
             userSampleCaches={userSampleCaches}
             factorySampleCaches={factorySampleCaches}
-            onSampleSelect={handleSampleSelect}
-            onSampleDelete={handleSampleDelete}
+            selectedSampleIds={librarySelection}
+            focusedSampleId={focusedSampleId}
+            onFocusSample={(selectedSample) => {
+              setFocusedSampleId(selectedSample.id);
+              setWorkspace('workbench');
+            }}
+            onSelectionChange={setLibrarySelection}
+            renderBulkActions={({ samples: selectedSamples }) => (
+              <SampleBulkActions
+                samples={selectedSamples}
+                userSampleIds={userSampleIds}
+                sampleCaches={allSampleCaches}
+                onDelete={handleSampleDelete}
+                onClearSelection={() => setLibrarySelection(new Set())}
+              />
+            )}
           />
-        </div>
-        <div className={`${classes.mainLayout} NOSCRIPT`}>
-          <h2>
-            Send a new sound to your volca sample!
-            <span style={{ fontSize: '0.7em' }}>
-              <br />
-              <span>(or volca sample 2!)</span>
-            </span>
-          </h2>
-          <p>
-            This free web app lets you record (or select), edit, and send custom
-            samples to your KORG Volca Sample. No installation needed — send the
-            samples straight from your browser to the volca sample, using a
-            3.5mm audio cable.
-          </p>
-          <p>Enable JavaScript and refresh the page to get started.</p>
-          <div
-            className={`${classes.normalFooterContainer} ${classes.force}`}
-          >
-            <Footer />
-          </div>
-        </div>
-        <div className={`${classes.mainLayout} SCRIPT_ONLY`}>
-          {!sample ? null : sample instanceof SampleContainer.Mutable ? (
-            <SampleDetail
-              sample={sample}
-              sampleCache={sampleCache}
-              pluginParamsDefs={pluginParamsDefs}
-              pluginStatusMap={pluginStatusMap}
-              isPluginManagerOpen={isPluginManagerOpen}
-              editCacheInvalidator={editCacheInvalidator}
-              onSampleUpdate={handleSampleUpdate}
-              onSampleDuplicate={handleSampleDuplicate}
-              onSampleDelete={handleSampleDelete}
-              onOpenPluginManager={openPluginManager}
-              onRecheckPlugins={updatePluginParamsDefs}
-              onRegenerateSampleCache={handleRegenerateSampleCache}
+        )}
+
+        {workspace === 'capture' && (
+          <Panel className={classes.capturePanel}>
+            <SectionHeading
+              eyebrow="Input / Local"
+              title="Record or import"
+              description="Create a sample from your microphone, an audio file, or an existing Volca Sampler backup."
             />
-          ) : (
-            <SampleDetailReadonly
-              sample={sample}
-              sampleCache={sampleCache}
-              onSampleDuplicate={handleSampleDuplicate}
-            />
-          )}
-          {!focusedSampleId && (
             <SampleRecord
               userSamples={userSamples}
               onUpdatePluginList={updatePluginParamsDefs}
@@ -751,35 +974,20 @@ function App() {
               onBulkImport={handleSampleBulkAdd}
               onRecordFinish={handleRecordFinish}
             />
-          )}
-          {(!focusedSampleId || sample) && (
-            <div className={classes.normalFooterContainer}>
-              <Footer />
-            </div>
-          )}
-        </div>
-        <div className={classes.mobileFooterContainer}>
-          <Container fluid="sm">
-            <h2>About Volca Sampler</h2>
+          </Panel>
+        )}
+
+        {workspace === 'about' && (
+          <Panel className={classes.aboutPanel}>
+            <SectionHeading
+              eyebrow="System / Help"
+              title="About Volca Sampler"
+              description="Compatibility, offline use, licenses, and local-first storage information."
+            />
             <Footer />
-          </Container>
-        </div>
-      </div>
-      <Nav
-        className={`${classes.mobilePageNav} SCRIPT_ONLY`}
-        activeKey={selectedMobilePage}
-        variant="underline"
-      >
-        <Nav.Item onClick={() => setSelectedMobilePage('sampleList')}>
-          <Nav.Link eventKey="sampleList">List</Nav.Link>
-        </Nav.Item>
-        <Nav.Item onClick={() => setSelectedMobilePage('currentSample')}>
-          <Nav.Link eventKey="currentSample">Sample</Nav.Link>
-        </Nav.Item>
-        <Nav.Item onClick={() => setSelectedMobilePage('about')}>
-          <Nav.Link eventKey="about">About</Nav.Link>
-        </Nav.Item>
-      </Nav>
+          </Panel>
+        )}
+      </AppShell>
       <PluginManager
         isOpen={isPluginManagerOpen}
         pluginList={pluginNameList}
@@ -792,6 +1000,14 @@ function App() {
         onClose={closePluginManager}
       />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider defaultTheme="dark">
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

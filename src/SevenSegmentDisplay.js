@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 
+/** @type {Record<string, string>} */
 const segmentPoints = {
   a: '4,1 18,1 20,3 18,5 4,5 2,3',
   b: '19,4 21,6 21,18 19,20 17,18 17,7',
@@ -10,6 +11,7 @@ const segmentPoints = {
   g: '4,18 18,18 20,20 18,22 4,22 2,20',
 };
 
+/** @type {Record<string, string>} */
 const digitSegments = {
   0: 'abcdef',
   1: 'bc',
@@ -25,57 +27,70 @@ const digitSegments = {
 };
 
 /**
- * @param {{
+ * @typedef {{
  *   value: string;
  *   color?: string;
  *   strokeColor?: string;
  *   digitCount?: number;
  *   decimalAfter?: number;
  *   pointClassName?: string;
- * }} props
+ *   ariaLabel?: string;
+ *   ariaHidden?: boolean;
+ * }} SevenSegmentDisplayProps
  */
-const SevenSegmentDisplay = forwardRef(function SevenSegmentDisplay(
-  {
-    value,
-    color = 'currentColor',
-    strokeColor = 'transparent',
-    digitCount = 4,
-    decimalAfter,
-    pointClassName,
-  },
-  ref
-) {
-  const digits = String(value).padStart(digitCount, ' ').slice(-digitCount);
-  return (
-    <svg
-      ref={ref}
-      role="img"
-      aria-label={String(value)}
-      viewBox={`0 0 ${digitCount * 24} 40`}
-    >
-      {Array.from(digits).map((digit, index) => (
-        <g key={index} data-digit transform={`translate(${index * 24} 0)`}>
-          {Array.from(digitSegments[digit] || '').map((segment) => (
-            <polygon
-              key={segment}
-              points={segmentPoints[segment]}
-              fill={color}
-              stroke={strokeColor}
-            />
-          ))}
-        </g>
-      ))}
-      {decimalAfter !== undefined && (
-        <circle
-          className={pointClassName}
-          cx={(decimalAfter + 1) * 24 - 1}
-          cy="36"
-          r="1.8"
-          fill={color}
-        />
-      )}
-    </svg>
-  );
-});
+
+const SevenSegmentDisplay = forwardRef(
+  /**
+   * @param {SevenSegmentDisplayProps} props
+   * @param {React.ForwardedRef<SVGSVGElement>} ref
+   */
+  function SevenSegmentDisplay(
+    {
+      value,
+      color = 'currentColor',
+      strokeColor = 'transparent',
+      digitCount = 4,
+      decimalAfter,
+      pointClassName,
+      ariaLabel,
+      ariaHidden = false,
+    },
+    ref
+  ) {
+    const digits = String(value).padStart(digitCount, ' ').slice(-digitCount);
+    return (
+      <svg
+        aria-hidden={ariaHidden || undefined}
+        aria-label={ariaHidden ? undefined : ariaLabel || String(value)}
+        focusable="false"
+        ref={ref}
+        role={ariaHidden ? undefined : 'img'}
+        viewBox={`0 0 ${digitCount * 24} 40`}
+      >
+        {Array.from(digits).map((digit, index) => (
+          <g key={index} data-digit transform={`translate(${index * 24} 0)`}>
+            {Array.from(digitSegments[digit] || '').map((segment) => (
+              <polygon
+                key={segment}
+                points={segmentPoints[segment]}
+                fill={color}
+                stroke={strokeColor}
+              />
+            ))}
+          </g>
+        ))}
+        {decimalAfter !== undefined && (
+          <circle
+            className={pointClassName}
+            cx={(decimalAfter + 1) * 24 - 1}
+            cy="36"
+            r="1.8"
+            fill={color}
+          />
+        )}
+      </svg>
+    );
+  }
+);
 
 export default SevenSegmentDisplay;

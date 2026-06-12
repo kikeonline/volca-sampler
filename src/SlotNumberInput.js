@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import { Form, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import KeyboardArrowUpIcon from '@material-design-icons/svg/filled/keyboard_arrow_up.svg';
 import KeyboardArrowDownIcon from '@material-design-icons/svg/filled/keyboard_arrow_down.svg';
@@ -31,6 +37,10 @@ const SlotNumberInput = React.memo(
    * }} props
    */
   function ({ slotNumber, onSlotNumberUpdate }) {
+    const accessibilityId = useId();
+    const labelId = `${accessibilityId}-label`;
+    const instructionsId = `${accessibilityId}-instructions`;
+    const slotNumberId = `${accessibilityId}-value`;
     const [slotNumberLocal, setSlotNumberLocal] = useState(slotNumber);
     useEffect(() => {
       setSlotNumberLocal(slotNumber);
@@ -59,10 +69,9 @@ const SlotNumberInput = React.memo(
       [onSlotNumberUpdate]
     );
 
-    /**
-     * @type {React.RefObject<HTMLDivElement>}
-     */
-    const slotNumberRef = useRef(null);
+    const slotNumberRef = useRef(
+      /** @type {HTMLDivElement | null} */ (null)
+    );
     const digitElementsRef = useRef(/** @type {SVGGElement[] | null} */ (null));
     {
       const focusedDigitRef = useRef(focusedDigit);
@@ -134,7 +143,7 @@ const SlotNumberInput = React.memo(
           e.preventDefault();
           const slotNumber = slotNumberLocalRef.current;
           const onSlotNumberUpdate = onSlotNumberUpdateRef.current;
-          if (!isNaN(Number(e.key))) {
+          if (/^[0-9]$/.test(e.key)) {
             // numberPressed is a digit 0-9
             const chars = String(slotNumber).padStart(3, '0').split('');
             chars[2 - focusedDigit] = e.key;
@@ -170,10 +179,12 @@ const SlotNumberInput = React.memo(
           slotNumberStart = slotNumberLocalRef.current;
         }
         slotNumberElement.addEventListener('mousedown', handleMouseDown);
-        slotNumberElement.addEventListener('touchstart', (e) => {
+        /** @param {TouchEvent} e */
+        function handleTouchStart(e) {
           e.preventDefault();
           handleMouseDown(e);
-        });
+        }
+        slotNumberElement.addEventListener('touchstart', handleTouchStart);
         /**
          * @param {MouseEvent | TouchEvent} e
          */
@@ -205,9 +216,11 @@ const SlotNumberInput = React.memo(
         }
         window.addEventListener('mouseup', handleMouseUp);
         slotNumberElement.addEventListener('touchend', handleMouseUp);
-        slotNumberElement.addEventListener('touchcancel', () => {
+        function handleTouchCancel() {
           document.body.style.userSelect = 'unset';
-        });
+          mousedown = false;
+        }
+        slotNumberElement.addEventListener('touchcancel', handleTouchCancel);
         /** @param {MouseEvent} e */
         function handleClick(e) {
           if (
@@ -222,17 +235,23 @@ const SlotNumberInput = React.memo(
           setFocusedDigit(2);
         }
         slotNumberElement.addEventListener('click', handleClick);
-        digitElementsRef.current.forEach((element, i) => {
-          const digit = /** @type {0 | 1 | 2} */ (i);
-          element.addEventListener('click', () => {
-            if (!slotNumberDragged) {
-              setFocusedDigit(digit);
+        const digitEventHandlers = digitElementsRef.current.map(
+          (element, i) => {
+            const digit = /** @type {0 | 1 | 2} */ (i);
+            function handleDigitClick() {
+              if (!slotNumberDragged) {
+                setFocusedDigit(digit);
+              }
             }
-          });
-          element.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-          });
-        });
+            /** @param {TouchEvent} e */
+            function handleDigitTouchStart(e) {
+              e.preventDefault();
+            }
+            element.addEventListener('click', handleDigitClick);
+            element.addEventListener('touchstart', handleDigitTouchStart);
+            return { element, handleDigitClick, handleDigitTouchStart };
+          }
+        );
         function handleFocus() {
           if (mousedown) {
             // we already handle this for mouse events
@@ -246,6 +265,29 @@ const SlotNumberInput = React.memo(
         slotNumberElement.addEventListener('focus', handleFocus);
         slotNumberElement.addEventListener('blur', handleBlur);
         return () => {
+          document.body.style.userSelect = 'unset';
+          slotNumberElement.removeEventListener('keydown', onKeyDown, true);
+          slotNumberElement.removeEventListener('keyup', onKeyUp, true);
+          slotNumberElement.removeEventListener('mousedown', handleMouseDown);
+          slotNumberElement.removeEventListener('touchstart', handleTouchStart);
+          slotNumberElement.removeEventListener('touchmove', handleMouseMove);
+          slotNumberElement.removeEventListener('touchend', handleMouseUp);
+          slotNumberElement.removeEventListener(
+            'touchcancel',
+            handleTouchCancel
+          );
+          slotNumberElement.removeEventListener('click', handleClick);
+          slotNumberElement.removeEventListener('focus', handleFocus);
+          slotNumberElement.removeEventListener('blur', handleBlur);
+          digitEventHandlers.forEach(
+            ({ element, handleDigitClick, handleDigitTouchStart }) => {
+              element.removeEventListener('click', handleDigitClick);
+              element.removeEventListener(
+                'touchstart',
+                handleDigitTouchStart
+              );
+            }
+          );
           window.removeEventListener('mousemove', handleMouseMove);
           window.removeEventListener('mouseup', handleMouseUp);
         };
@@ -263,22 +305,49 @@ const SlotNumberInput = React.memo(
         }
       });
     }, [focusedDigit]);
+    const formattedSlotNumber = String(slotNumberLocal).padStart(3, '0');
     return (
       <>
-        <Form.Label>Choose destination</Form.Label>
+        <Form.Label as="span" id={labelId}>
+          Choose destination
+        </Form.Label>
+        <span className={classes.srOnly} id={instructionsId}>
+          Destination slots range from 0 to 199. Type three digits, use Left
+          and Right Arrow to select a digit, use Up and Down Arrow to adjust
+          it, or drag the display vertically. The buttons above and below
+          adjust individual digits.
+        </span>
         <br />
         <div className={classes.slotNumberRow}>
           <div className={classes.slotNumberContainer}>
             <div className={classes.arrowControls}>
-              <span onClick={() => handleArrowUp(2)}>
-                <KeyboardArrowUpIcon />
-              </span>
-              <span onClick={() => handleArrowUp(1)}>
-                <KeyboardArrowUpIcon />
-              </span>
-              <span onClick={() => handleArrowUp(0)}>
-                <KeyboardArrowUpIcon />
-              </span>
+              <button
+                aria-controls={slotNumberId}
+                aria-label="Increase hundreds digit by 100"
+                className={classes.arrowControl}
+                onClick={() => handleArrowUp(2)}
+                type="button"
+              >
+                <KeyboardArrowUpIcon aria-hidden="true" focusable="false" />
+              </button>
+              <button
+                aria-controls={slotNumberId}
+                aria-label="Increase tens digit by 10"
+                className={classes.arrowControl}
+                onClick={() => handleArrowUp(1)}
+                type="button"
+              >
+                <KeyboardArrowUpIcon aria-hidden="true" focusable="false" />
+              </button>
+              <button
+                aria-controls={slotNumberId}
+                aria-label="Increase ones digit by 1"
+                className={classes.arrowControl}
+                onClick={() => handleArrowUp(0)}
+                type="button"
+              >
+                <KeyboardArrowUpIcon aria-hidden="true" focusable="false" />
+              </button>
             </div>
             <OverlayTrigger
               delay={{ show: 400, hide: 0 }}
@@ -286,15 +355,24 @@ const SlotNumberInput = React.memo(
               overlay={<Tooltip>Slot {slotNumberLocal}</Tooltip>}
             >
               <div
+                aria-describedby={instructionsId}
+                aria-labelledby={labelId}
+                aria-valuemax={199}
+                aria-valuemin={0}
+                aria-valuenow={slotNumberLocal}
+                aria-valuetext={`S${formattedSlotNumber}, destination slot ${slotNumberLocal}`}
                 className={classes.slotNumber}
+                id={slotNumberId}
                 ref={slotNumberRef}
+                role="spinbutton"
                 tabIndex={0}
               >
                 {/* behind the real information we just put a row of faint 8s to
         simulate the effect of unilluminated character segments */}
                 <SevenSegmentDisplay
+                  ariaHidden
                   value="8888"
-                  color="var(--bs-gray-dark)"
+                  color="var(--slot-display-segment-muted, var(--bs-gray-dark, #343a40))"
                   strokeColor="transparent"
                   digitCount={4}
                 />
@@ -314,8 +392,9 @@ const SlotNumberInput = React.memo(
                     }
                   }
                   // the 5 actually represents an S
-                  value={`S${String(slotNumberLocal).padStart(3, '0')}`}
-                  color="var(--bs-primary)"
+                  ariaHidden
+                  value={`S${formattedSlotNumber}`}
+                  color="var(--slot-display-segment, var(--bs-primary, #e50b0b))"
                   digitCount={4}
                   decimalAfter={0}
                   pointClassName={classes.point}
@@ -323,15 +402,33 @@ const SlotNumberInput = React.memo(
               </div>
             </OverlayTrigger>
             <div className={classes.arrowControls}>
-              <span onClick={() => handleArrowDown(2)}>
-                <KeyboardArrowDownIcon />
-              </span>
-              <span onClick={() => handleArrowDown(1)}>
-                <KeyboardArrowDownIcon />
-              </span>
-              <span onClick={() => handleArrowDown(0)}>
-                <KeyboardArrowDownIcon />
-              </span>
+              <button
+                aria-controls={slotNumberId}
+                aria-label="Decrease hundreds digit by 100"
+                className={classes.arrowControl}
+                onClick={() => handleArrowDown(2)}
+                type="button"
+              >
+                <KeyboardArrowDownIcon aria-hidden="true" focusable="false" />
+              </button>
+              <button
+                aria-controls={slotNumberId}
+                aria-label="Decrease tens digit by 10"
+                className={classes.arrowControl}
+                onClick={() => handleArrowDown(1)}
+                type="button"
+              >
+                <KeyboardArrowDownIcon aria-hidden="true" focusable="false" />
+              </button>
+              <button
+                aria-controls={slotNumberId}
+                aria-label="Decrease ones digit by 1"
+                className={classes.arrowControl}
+                onClick={() => handleArrowDown(0)}
+                type="button"
+              >
+                <KeyboardArrowDownIcon aria-hidden="true" focusable="false" />
+              </button>
             </div>
           </div>
           {slotNumber > 99 && slotNumberLocal > 99 && (
@@ -344,9 +441,13 @@ const SlotNumberInput = React.memo(
                 </Tooltip>
               }
             >
-              <span className={classes.warning}>
-                <WarningIcon />
-              </span>
+              <button
+                aria-label="Volca Sample 2 required for destination slots above 99"
+                className={classes.warning}
+                type="button"
+              >
+                <WarningIcon aria-hidden="true" focusable="false" />
+              </button>
             </OverlayTrigger>
           )}
         </div>

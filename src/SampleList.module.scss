@@ -6,11 +6,11 @@
   --trim-pixels-left: 0px;
   --trim-pixels-right: 0px;
   --waveform-width: 0px; // defined by javascript
-  filter: var(--grayscale-filter);
-  mix-blend-mode: darken;
+  filter: grayscale(1) brightness(0.95) sepia(0.2);
   position: relative;
-  width: var(--waveform-width);
-  height: 40px;
+  width: 100%;
+  height: 24px;
+  opacity: 0.68;
 
   &.playbackActive {
     filter: unset;
@@ -22,11 +22,16 @@
 }
 
 div.listItem {
-  cursor: initial;
+  min-height: 64px;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
   text-align: left;
   overflow: hidden;
+  background: var(--color-surface);
+  border-color: var(--color-border);
+
   &:hover {
-    background-color: var(--bs-gray-100);
+    background-color: var(--color-surface-raised);
   }
 
   &:hover,
@@ -37,7 +42,20 @@ div.listItem {
 
     .waveformContainer {
       filter: unset;
+      opacity: 1;
     }
+  }
+
+  &.active {
+    color: var(--color-text);
+    background:
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--color-primary) 14%, transparent),
+        transparent 45%
+      ),
+      var(--color-surface-raised);
+    border-left: 3px solid var(--color-primary);
   }
 
   &:focus,
@@ -49,19 +67,24 @@ div.listItem {
   .sampleTitle {
     white-space: nowrap;
     display: flex;
-    margin-bottom: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.2rem;
 
     .name {
       text-overflow: ellipsis;
       overflow: hidden;
       min-width: 0;
       flex-grow: 1;
+      color: var(--color-text);
+      font-size: 0.78rem;
+      font-weight: 700;
     }
 
     .slot {
-      font-size: 0.8rem;
-      font-family: monospace;
-      opacity: 0.6;
+      color: var(--color-primary);
+      font-size: 0.7rem;
+      font-family: var(--mono-font-family);
+      font-weight: 800;
       margin-left: 0.5rem;
       line-height: 1.5rem;
     }
@@ -80,8 +103,13 @@ div.listItem {
   .playbackButton {
     border-radius: 50%;
     position: relative;
-    padding: 14px;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0;
     margin-right: 0.5rem;
+    color: var(--color-text-muted);
+    background: var(--color-surface-subtle);
+    border-color: var(--color-border-strong);
 
     & > svg {
       position: absolute;

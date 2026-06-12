@@ -1,4 +1,5 @@
 import React, {
+  useEffect,
   useImperativeHandle,
   useLayoutEffect,
   useRef,
@@ -108,7 +109,21 @@ function WaveformDisplayCanvas({
   const canvasRef = useRef(null);
   useImperativeHandle(waveformRef, () => canvasRef.current);
   const [lastResize, setLastResize] = useState(Symbol());
+  const [theme, setTheme] = useState(
+    () => document.documentElement.dataset.theme || 'light'
+  );
   const sizeRef = useRef({ width: 0, height: 0 });
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setTheme(root.dataset.theme || 'light');
+    });
+    observer.observe(root, {
+      attributeFilter: ['data-theme'],
+      attributes: true,
+    });
+    return () => observer.disconnect();
+  }, []);
   useLayoutEffect(() => {
     if (!canvasRef.current) {
       throw new Error('Canvas should be defined');
@@ -149,13 +164,13 @@ function WaveformDisplayCanvas({
       });
     });
     return () => cancelAnimationFrame(frame);
-  }, [peaks, scaleCoefficient, lastResize]);
+  }, [peaks, scaleCoefficient, lastResize, theme]);
   return (
     <canvas
       ref={canvasRef}
       style={{
         ...canvasStyle,
-        backgroundColor: opaque ? 'white' : 'unset',
+        backgroundColor: opaque ? 'var(--color-surface-raised, white)' : 'unset',
       }}
     />
   );

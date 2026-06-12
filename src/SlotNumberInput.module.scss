@@ -3,42 +3,78 @@
 @import 'bootstrap/scss/variables';
 
 .slotNumberRow {
+  --slot-warning-color: var(--bs-warning, #ffc107);
   display: flex;
-  margin-bottom: 1.5rem;
+  justify-content: center;
+  margin-bottom: 1rem;
 }
 
 .slotNumberContainer {
-  --slot-width: 160px;
+  --slot-width: min(100%, 190px);
   --slot-padding: 0.25rem;
-  --slot-bg-color: var(--bs-dark);
+  --slot-display-surface: var(
+    --slot-bg-color,
+    var(--bs-dark, #212529)
+  );
+  --slot-display-segment: #ff604f;
+  --slot-display-segment-muted: #26313a;
+  --slot-control-foreground: var(--bs-body-color, currentColor);
+  --slot-focus-ring: #{$input-btn-focus-box-shadow};
   width: var(--slot-width);
+  padding: 0.65rem;
+  background: var(--color-code-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
 }
 
 .arrowControls {
   display: flex;
   justify-content: flex-end;
   width: var(--slot-width);
-  height: 2rem;
+  height: 36px;
   padding-left: var(--slot-padding);
   padding-right: var(--slot-padding);
 
-  & > span {
+  & > .arrowControl {
     height: 100%;
-    width: 25%;
-    display: flex;
-    justify-content: center;
-    cursor: pointer;
+    min-width: 36px;
+    flex: 1;
+  }
+}
+
+.arrowControl,
+.warning {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--slot-padding, 0.25rem);
+  color: var(--slot-control-foreground, var(--bs-body-color, currentColor));
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  line-height: 0;
+  margin: 0;
+  padding: 0;
+  touch-action: manipulation;
+
+  &:focus-visible {
+    outline: 0;
+    box-shadow: var(--slot-focus-ring, #{$input-btn-focus-box-shadow});
   }
 }
 
 .slotNumber {
-  background-color: var(--slot-bg-color);
+  background-color: var(
+    --slot-display-surface,
+    var(--slot-bg-color, var(--bs-dark, #212529))
+  );
   display: inline-block;
   width: var(--slot-width);
   padding: var(--slot-padding);
-  border-radius: var(--slot-padding);
+  border-radius: 0;
   position: relative;
   cursor: text;
+  touch-action: none;
 
   & > svg {
     width: calc(var(--slot-width) - var(--slot-padding) * 2);
@@ -47,12 +83,15 @@
     // digits background outlines
     &:first-child {
       position: absolute;
-      top: 0.25rem;
+      top: var(--slot-padding);
       opacity: 0.7;
     }
 
     polygon {
-      stroke: var(--slot-bg-color);
+      stroke: var(
+        --slot-display-surface,
+        var(--slot-bg-color, var(--bs-dark, #212529))
+      );
     }
 
     g {
@@ -67,24 +106,41 @@
     }
 
     circle.point {
-      fill: var(--bs-primary);
+      fill: var(
+        --slot-display-segment,
+        var(--bs-primary, #e50b0b)
+      );
     }
   }
 
   &:focus,
   &:focus-visible {
     outline: 0;
-    box-shadow: $input-btn-focus-box-shadow;
+    box-shadow: var(--slot-focus-ring, #{$input-btn-focus-box-shadow});
   }
 }
 
 .warning {
+  min-width: 44px;
+  min-height: 44px;
   margin-left: 1rem;
   align-self: center;
 
   & > svg {
-    fill: var(--bs-warning);
+    fill: var(--slot-warning-color, var(--bs-warning, #ffc107));
   }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @keyframes digitBlinkEffect {
@@ -96,5 +152,12 @@
   }
   to {
     visibility: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slotNumber > svg g.active {
+    animation: none;
+    opacity: 0.6;
   }
 }

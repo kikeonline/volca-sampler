@@ -4,12 +4,34 @@
 @import 'bootstrap/scss/variables';
 
 .transferInfoBox {
-  width: 240px;
-  white-space: nowrap;
+  width: 100%;
+  display: grid;
+  gap: 0.5rem;
   margin-bottom: 1rem;
-  background-color: #f3f3f3;
   padding: 0.75rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
   border-radius: 0.25rem;
+  font-size: 0.75rem;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  strong {
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  :global(i) {
+    color: var(--color-text);
+    font-family: var(--mono-font-family);
+    font-style: normal;
+    font-weight: 800;
+  }
 }
 
 .summary {
@@ -41,14 +63,15 @@
 .transferButton {
   display: block;
   width: 100%;
-
-  @include media-breakpoint-up(sm) {
-    width: unset;
-  }
+  min-height: 3.6rem;
+  font-weight: 800;
 }
 
 .clearSpaceButton {
-  margin-top: 1rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  color: var(--color-text);
+  text-align: center;
 }
 
 .preTransferModal {

@@ -180,18 +180,27 @@ function VolcaTransferControl({
         cancelWork();
         cancelled = true;
       };
-      syroBufferPromise.then(async ({ syroBuffer, dataStartPoints }) => {
-        if (cancelled) {
-          return;
-        }
-        stop = () => {
-          cancelled = true;
-        };
-        setSyroBufferAndDataStartPoints({
-          syroBuffer,
-          dataStartPoints,
+      syroBufferPromise
+        .then(async ({ syroBuffer, dataStartPoints }) => {
+          if (cancelled) {
+            return;
+          }
+          stop = () => {
+            cancelled = true;
+          };
+          setSyroBufferAndDataStartPoints({
+            syroBuffer,
+            dataStartPoints,
+          });
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          console.error(err);
+          setSyroBufferAndDataStartPoints({
+            syroBuffer: new Error(String(err)),
+            dataStartPoints: [],
+          });
         });
-      });
     } catch (err) {
       console.error(err);
       setSyroBufferAndDataStartPoints({
@@ -239,7 +248,6 @@ function VolcaTransferControl({
     <>
       {!justTheButton && (
         <>
-          <div className={classes.transferInfoBox}>{transferInfo}</div>
           <SlotNumberInput
             slotNumber={samples[0].metadata.slotNumber}
             onSlotNumberUpdate={
@@ -248,6 +256,7 @@ function VolcaTransferControl({
               )
             }
           />
+          <div className={classes.transferInfoBox}>{transferInfo}</div>
         </>
       )}
       {React.cloneElement(
@@ -257,7 +266,7 @@ function VolcaTransferControl({
             type="button"
             variant="primary"
           >
-            Transfer to volca sample
+            Transfer sample
           </Button>
         ),
         {
@@ -277,7 +286,7 @@ function VolcaTransferControl({
           variant="link"
           onClick={() => setIsInfoBeforeEraseModalOpen(true)}
         >
-          Or clear space on the volca
+          Clear slots on Volca
         </Button>
       )}
       <Modal
@@ -293,14 +302,14 @@ function VolcaTransferControl({
         </Modal.Header>
         <Modal.Body>
           <div className={classes.summary}>
-            <p
+            <div
               className={[
                 classes.transferInfoForModal,
                 canTransferSamples ? '' : classes.cannotTransfer,
               ].join(' ')}
             >
               {transferInfo}
-            </p>
+            </div>
             {!canTransferSamples && (
               <div className={classes.errors}>
                 {duplicateSlots.length > 0 ? (

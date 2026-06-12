@@ -1,10 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-bs-theme="dark">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="./favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0c1014" />
+    <script>
+      (() => {
+        const themeColors = {
+          light: '#d7d7d3',
+          dark: '#0c1014',
+        };
+        const theme = 'dark';
+        const root = document.documentElement;
+
+        root.dataset.theme = theme;
+        root.dataset.bsTheme = theme;
+        root.style.colorScheme = theme;
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute('content', themeColors[theme]);
+      })();
+    </script>
     <meta
       name="description"
       content="Easily sample new sounds and send them to your KORG volca sample or volca sample 2 using this free browser tool. No software or drivers required."

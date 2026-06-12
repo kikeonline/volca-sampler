@@ -309,7 +309,10 @@ const SampleMenu = React.memo(
       <>
         <Button
           hidden={hasMultiSelection}
-          className={classes.sampleMenuButtonFullWidth}
+          className={[
+            classes.sampleMenuButtonFullWidth,
+            classes.newSampleButton,
+          ].join(' ')}
           type="button"
           variant="primary"
           onClick={() => {
@@ -335,7 +338,10 @@ const SampleMenu = React.memo(
         </Button>
         <Button
           hidden={hasMultiSelection}
-          className={classes.sampleMenuButtonFullWidth}
+          className={[
+            classes.sampleMenuButtonFullWidth,
+            classes.selectModeButton,
+          ].join(' ')}
           type="button"
           variant="outline-secondary"
           onClick={() => setMultipleSelection(new Set())}
@@ -344,7 +350,10 @@ const SampleMenu = React.memo(
         </Button>
         <Button
           hidden={!hasMultiSelection}
-          className={classes.sampleMenuButtonFullWidth}
+          className={[
+            classes.sampleMenuButtonFullWidth,
+            classes.selectModeButton,
+          ].join(' ')}
           type="button"
           variant="secondary"
           onClick={() =>

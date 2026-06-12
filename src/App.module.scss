@@ -4,139 +4,236 @@
 @import 'bootstrap/scss/mixins';
 
 .app {
-  display: flex;
-  flex-direction: column;
   min-height: 100%;
-  height: 100%;
+}
 
-  @include media-breakpoint-up(md) {
-    height: unset;
+.consoleShell,
+.consoleShellDense {
+  --shell-command-height: 72px;
+  --shell-rail-width: 72px;
+}
+
+.consoleShellDense {
+  --shell-workspace-padding-desktop: 0;
+  --shell-workspace-padding-wide: 0;
+}
+
+.brandMark {
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border: 0;
+  border-radius: 0.45rem 0.12rem 0.45rem 0.12rem;
+  font-family: var(--mono-font-family);
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  transform: skewX(-4deg);
+}
+
+.storageStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-muted);
+  font-family: var(--mono-font-family);
+  font-size: 0.72rem;
+
+  i {
+    width: 0.45rem;
+    height: 0.45rem;
+    background: var(--color-success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0.2rem
+      color-mix(in srgb, var(--color-success) 16%, transparent);
+  }
+
+  b {
+    width: 1px;
+    height: 1rem;
+    background: var(--color-border);
   }
 }
 
-.mobileLayoutContainer {
-  position: relative;
-  height: 100%;
-  @include media-breakpoint-up(md) {
-    height: unset;
+.commandButton,
+.primaryCommand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  color: var(--color-text);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: currentColor;
   }
 }
 
-.sampleListSidebar {
-  padding: 1rem;
-  padding-top: 2rem;
-  position: absolute;
-  flex-direction: column;
-  gap: 1rem;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 100vw;
-
-  display: none;
-  .mobileLayoutContainer.sampleList & {
-    display: flex;
-  }
-
-  @include media-breakpoint-up(sm) {
-    max-width: map-get($container-max-widths, sm);
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  @include media-breakpoint-up(md) {
-    max-width: unset;
-    left: 0;
-    transform: unset;
-    display: flex;
-    position: fixed;
-    width: var(--sidebar-width);
-    top: 115px;
-  }
+.primaryCommand {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
-.mainLayout {
-  flex-grow: 1;
-  padding: 2rem;
+.themeButton {
+  min-height: 2.25rem;
+  box-shadow: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.workbench {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.sampleBank {
   display: flex;
+  min-width: 0;
+  max-height: 34rem;
   flex-direction: column;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  overflow-y: auto;
-
-  display: none;
-  .mobileLayoutContainer.currentSample & {
-    display: flex;
-  }
-
-  @include media-breakpoint-up(sm) {
-    // set horizontal padding to match title bar
-    padding-left: 4rem;
-    padding-right: 4rem;
-  }
-
-  @include media-breakpoint-up(md) {
-    display: flex;
-    position: unset;
-    width: unset;
-    overflow-y: unset;
-    margin-left: var(--sidebar-width);
-  }
-
-  & > [class*='container'] {
-    flex-grow: 1;
-  }
+  gap: 0.65rem;
+  overflow: hidden;
+  border-width: 0 1px 0 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-.mobileFooterContainer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  overflow-y: auto;
+.bankHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-direction: column;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--color-border);
 
-  display: none;
-  .mobileLayoutContainer.about & {
-    display: unset;
+  div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
 
-    @include media-breakpoint-up(md) {
-      display: none;
+  div span {
+    color: var(--color-primary);
+    font-family: var(--mono-font-family);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  div strong {
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  button {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.55rem;
+    color: var(--color-text-muted);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+      fill: currentColor;
     }
   }
+}
 
-  h2 {
-    padding: 2rem 1rem 0;
+.editorWorkspace {
+  min-width: 0;
+}
+
+.emptyWorkbench,
+.capturePanel,
+.aboutPanel {
+  max-width: 76rem;
+  margin-inline: auto;
+}
+
+.emptyWorkbench {
+  min-height: 20rem;
+}
+
+.emptyActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.capturePanel,
+.aboutPanel {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+@include media-breakpoint-up(lg) {
+  .workbench {
+    min-height: calc(100dvh - var(--shell-command-height, 72px));
+    grid-template-columns: minmax(16rem, 19.0625rem) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .sampleBank {
+    min-height: calc(100dvh - var(--shell-command-height, 72px));
+    height: calc(100dvh - var(--shell-command-height, 72px));
+    max-height: calc(100dvh - var(--shell-command-height, 72px));
+    padding: 0.875rem 0.75rem;
+  }
+
+  .bankHeading {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .editorWorkspace {
+    min-height: calc(100dvh - var(--shell-command-height, 72px));
   }
 }
 
-.normalFooterContainer {
-  padding-top: 3rem;
-
-  &:not(.force) {
+@media (max-width: 700px) {
+  .commandButton span,
+  .primaryCommand span,
+  .themeButton span {
     display: none;
+  }
 
-    @include media-breakpoint-up(md) {
-      display: unset;
-    }
+  .commandButton,
+  .primaryCommand,
+  .themeButton {
+    width: 2.75rem;
+    padding: 0;
+  }
+
+  .sampleBank {
+    max-height: 26rem;
+  }
+
+  .bankHeading {
+    align-items: stretch;
   }
 }
 
-.mobilePageNav {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  font-size: 1.25rem;
-  padding: 0.5rem;
-  background-color: #f3f3f3;
-  border-top: 1px solid #ccc;
-
-  @include media-breakpoint-up(md) {
+@media (max-width: 420px) {
+  .commandButton {
     display: none;
   }
 }

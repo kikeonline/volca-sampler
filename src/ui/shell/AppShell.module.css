@@ -1,0 +1,214 @@
+.shell {
+  --shell-color-bg: var(--color-canvas, #0c1014);
+  --shell-color-surface: var(--color-surface, #12181e);
+  --shell-color-surface-raised: var(--color-surface-raised, #171f26);
+  --shell-color-surface-inset: var(--color-canvas, #090d10);
+  --shell-color-text: var(--color-text, #e7ecf0);
+  --shell-color-muted: var(--color-text-muted, #9aa6af);
+  --shell-color-border: var(--color-border, #34404a);
+  --shell-color-accent: var(--color-primary, #f7a629);
+  --shell-color-accent-contrast: var(--color-on-primary, #171006);
+  --shell-color-focus: var(--color-focus-ring, #ffbd59);
+  --shell-font-sans: var(
+    --font-sans,
+    Inter,
+    ui-sans-serif,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif
+  );
+  --shell-font-condensed: var(
+    --font-condensed,
+    "Arial Narrow",
+    "Roboto Condensed",
+    var(--shell-font-sans)
+  );
+  --shell-font-mono: var(
+    --font-mono,
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace
+  );
+  --shell-radius: var(--radius-sm, 4px);
+  --shell-command-height: 56px;
+  --shell-command-offset: 0px;
+  --shell-rail-width: 76px;
+  --shell-transfer-width: 304px;
+  --shell-mobile-nav-height: 64px;
+  --shell-workspace-padding: 16px;
+  --shell-workspace-padding-desktop: 24px;
+  --shell-workspace-padding-wide: 32px;
+  min-width: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: var(--shell-color-text, #e7ecf0);
+  background-color: var(--shell-color-bg, #0c1014);
+  background-image:
+    linear-gradient(
+      color-mix(
+          in srgb,
+          var(--shell-color-border, #34404a) 18%,
+          transparent
+        )
+        1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(
+          in srgb,
+          var(--shell-color-border, #34404a) 18%,
+          transparent
+        )
+        1px,
+      transparent 1px
+    );
+  background-size: 24px 24px;
+  font-family: var(--shell-font-sans);
+  overflow-x: clip;
+}
+
+.hasCommandBar {
+  --shell-command-offset: var(--shell-command-height, 56px);
+}
+
+.shell,
+.shell *,
+.shell *::before,
+.shell *::after {
+  box-sizing: border-box;
+}
+
+.skipLink {
+  position: fixed;
+  z-index: 1000;
+  top: 8px;
+  left: 8px;
+  padding: 10px 14px;
+  color: var(--shell-color-accent-contrast, #171006);
+  background: var(--shell-color-accent, #f7a629);
+  border-radius: var(--shell-radius, 4px);
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform 160ms ease-out;
+}
+
+.skipLink:focus {
+  transform: translateY(0);
+}
+
+.commandBarSlot {
+  position: sticky;
+  z-index: 40;
+  top: 0;
+  min-width: 0;
+  order: 1;
+}
+
+.layout {
+  min-width: 0;
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: minmax(0, 1fr);
+  order: 3;
+}
+
+.utilityRailSlot {
+  display: none;
+}
+
+.workspace {
+  min-width: 0;
+  width: 100%;
+  padding: var(--shell-workspace-padding);
+  overflow-wrap: anywhere;
+}
+
+.workspace:focus {
+  outline: none;
+}
+
+.workspace:focus-visible {
+  outline: 3px solid var(--shell-color-focus, #ffbd59);
+  outline-offset: -3px;
+}
+
+.transferDeck {
+  min-width: 0;
+  width: 100%;
+  padding: 16px;
+  background: var(--shell-color-surface, #12181e);
+  border-top: 1px solid var(--shell-color-border, #34404a);
+  overflow-wrap: anywhere;
+}
+
+.workspaceNavSlot {
+  position: sticky;
+  z-index: 35;
+  top: var(--shell-command-offset, 0);
+  min-width: 0;
+  order: 2;
+}
+
+@media (min-width: 960px) {
+  .layout {
+    min-height: calc(100dvh - var(--shell-command-offset, 0px));
+    align-items: stretch;
+  }
+
+  .hasUtilityRail .layout {
+    grid-template-columns:
+      var(--shell-rail-width, 76px)
+      minmax(0, 1fr);
+  }
+
+  .hasTransferDeck .layout {
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(264px, var(--shell-transfer-width, 304px));
+  }
+
+  .hasUtilityRail.hasTransferDeck .layout {
+    grid-template-columns:
+      var(--shell-rail-width, 76px)
+      minmax(0, 1fr)
+      minmax(264px, var(--shell-transfer-width, 304px));
+  }
+
+  .utilityRailSlot {
+    min-width: 0;
+    display: block;
+    background: var(--shell-color-surface-inset, #090d10);
+    border-right: 1px solid var(--shell-color-border, #34404a);
+  }
+
+  .workspace {
+    padding: var(--shell-workspace-padding-desktop);
+  }
+
+  .transferDeck {
+    padding: 20px 16px;
+    border-top: 0;
+    border-left: 1px solid var(--shell-color-border, #34404a);
+  }
+
+  .workspaceNavSlot {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .workspace {
+    padding: var(--shell-workspace-padding-wide);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skipLink {
+    transition: none;
+  }
+}

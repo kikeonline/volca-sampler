@@ -1,0 +1,106 @@
+.commandBar {
+  min-width: 0;
+  min-height: calc(
+    var(--shell-command-height, 56px) + env(safe-area-inset-top, 0px)
+  );
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding:
+    calc(6px + env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    6px
+    max(12px, env(safe-area-inset-left, 0px));
+  color: var(--shell-color-text, #e7ecf0);
+  background: var(--shell-color-surface, #12181e);
+  border-bottom: 1px solid var(--shell-color-border, #34404a);
+  box-shadow: none;
+}
+
+.brand {
+  min-width: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.identity {
+  min-width: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.15;
+}
+
+.title {
+  overflow: hidden;
+  font-family: var(--shell-font-condensed, "Arial Narrow", sans-serif);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.context {
+  overflow: hidden;
+  color: var(--shell-color-muted, #9aa6af);
+  font-family: var(--shell-font-mono, monospace);
+  font-size: 11px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status,
+.actions {
+  min-width: 0;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.commandBar button,
+.commandBar a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.commandBar button {
+  cursor: pointer;
+}
+
+.commandBar button:focus-visible,
+.commandBar a:focus-visible {
+  outline: 3px solid var(--shell-color-focus, #ffbd59);
+  outline-offset: 2px;
+}
+
+@media (max-width: 479px) {
+  .commandBar {
+    gap: 8px;
+  }
+
+  .context,
+  .status {
+    display: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .commandBar {
+    min-height: var(--shell-command-height, 72px);
+    padding: 10px 18px;
+  }
+
+  .commandBar button,
+  .commandBar a {
+    min-height: 36px;
+  }
+}

@@ -1,13 +1,17 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Buffer } from 'buffer';
-import './index.css';
 import './bootstrap.scss';
+import './index.css';
 import App from './App.js';
 import GlobalErrorBoundary from './GlobalErrorBoundary.js';
 import reportWebVitals from './reportWebVitals.js';
 import { AudioPlaybackContextProvider } from './utils/audioData.js';
 import { initPlugins } from './pluginStore';
+import {
+  DesignConceptPreview,
+  getDesignConceptFromPath,
+} from './design-concepts/index.js';
 
 globalThis.Buffer = Buffer;
 
@@ -27,17 +31,25 @@ if (typeof TouchEvent === 'undefined') {
   );
 }
 
+const designConcept = getDesignConceptFromPath(window.location.pathname);
+
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <GlobalErrorBoundary>
-      <AudioPlaybackContextProvider>
-        <App />
-      </AudioPlaybackContextProvider>
-    </GlobalErrorBoundary>
+    {designConcept ? (
+      <DesignConceptPreview concept={designConcept} />
+    ) : (
+      <GlobalErrorBoundary>
+        <AudioPlaybackContextProvider>
+          <App />
+        </AudioPlaybackContextProvider>
+      </GlobalErrorBoundary>
+    )}
   </React.StrictMode>
 );
 
-initPlugins();
+if (!designConcept) {
+  initPlugins();
+}
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
