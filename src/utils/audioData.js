@@ -618,6 +618,7 @@ export function AudioPlaybackContextProvider({ children }) {
       }
       source.addEventListener('ended', () => {
         if (!stopped) {
+          stopped = true;
           onTimeUpdate(audioBuffer.duration);
           handleEnded();
         }
@@ -626,10 +627,10 @@ export function AudioPlaybackContextProvider({ children }) {
       /** @type {typeof stopCurrent.current} */
       function stop(stoppedForNewAudio) {
         if (!stopped) {
+          stopped = true;
           source.stop();
           cancelAnimationFrame(frame);
           handleEnded(stoppedForNewAudio);
-          stopped = true;
         }
       }
       stopCurrent.current = stop;

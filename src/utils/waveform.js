@@ -139,18 +139,9 @@ export function useWaveformPlayback(audioBuffer, shouldHandleSpace = false) {
   const { playAudioBuffer, iOSPrepareForAudio } = useAudioPlaybackContext();
   // to be set when playback is started
   const stopPreviewPlayback = useRef(() => {});
-  const [callbackOnPreviewWav, setCallbackOnPreviewWav] = useState(
-    /** @type {{ fn: () => void } | null} */ (null)
-  );
-  useEffect(() => {
-    if (audioBuffer && callbackOnPreviewWav) {
-      setCallbackOnPreviewWav(null);
-      callbackOnPreviewWav.fn();
-    }
-  }, [audioBuffer, callbackOnPreviewWav]);
-
   const [playbackProgress, setPlaybackProgress] = useState(0);
   const [isPlaybackActive, setIsPlaybackActive] = useState(false);
+  const [playWhenReady, setPlayWhenReady] = useState(false);
 
   const [displayedTime, setDisplayedTime] = useState('');
   useEffect(() => {
@@ -163,22 +154,38 @@ export function useWaveformPlayback(audioBuffer, shouldHandleSpace = false) {
     }
   }, [audioBuffer, isPlaybackActive, playbackProgress]);
 
+  const startPlayback = useCallback(
+    /** @param {AudioBuffer} buffer */
+    (buffer) => {
+      stopPreviewPlayback.current = playAudioBuffer(buffer, {
+        onTimeUpdate(currentTime) {
+          setPlaybackProgress(currentTime / buffer.duration);
+        },
+        onEnded() {
+          setIsPlaybackActive(false);
+        },
+      });
+      setPlaybackProgress(0);
+      setIsPlaybackActive(true);
+    },
+    [playAudioBuffer]
+  );
+
+  useEffect(() => {
+    if (audioBuffer && playWhenReady) {
+      setPlayWhenReady(false);
+      startPlayback(audioBuffer);
+    }
+  }, [audioBuffer, playWhenReady, startPlayback]);
+
   const togglePlayback = useCallback(
     /** @param {MouseEvent | KeyboardEvent} e */
-    (e) => {
+    (_event) => {
       if (isPlaybackActive) {
+        setPlayWhenReady(false);
         stopPreviewPlayback.current();
       } else if (audioBuffer) {
-        stopPreviewPlayback.current = playAudioBuffer(audioBuffer, {
-          onTimeUpdate(currentTime) {
-            setPlaybackProgress(currentTime / audioBuffer.duration);
-          },
-          onEnded() {
-            setIsPlaybackActive(false);
-          },
-        });
-        setPlaybackProgress(0);
-        setIsPlaybackActive(true);
+        startPlayback(audioBuffer);
       } else {
         if (userOS === 'ios') {
           // we need to start playing the silent audio element right away
@@ -186,17 +193,10 @@ export function useWaveformPlayback(audioBuffer, shouldHandleSpace = false) {
           // buffer as undesired audio playback.
           iOSPrepareForAudio();
         }
-        const target = /** @type {EventTarget} */ (e.target);
-        // wait until the audio buffer is ready then simulate an event
-        // to retry this handler. it's important that we simulate
-        // another action because otherwise iOS won't let us play the
-        // audio later.
-        setCallbackOnPreviewWav({
-          fn: () => target.dispatchEvent(e),
-        });
+        setPlayWhenReady(true);
       }
     },
-    [isPlaybackActive, playAudioBuffer, audioBuffer, iOSPrepareForAudio]
+    [audioBuffer, iOSPrepareForAudio, isPlaybackActive, startPlayback]
   );
 
   useEffect(() => {
