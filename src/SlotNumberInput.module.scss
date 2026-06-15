@@ -28,9 +28,9 @@
 }
 
 .arrowControls {
-  display: flex;
-  justify-content: flex-end;
-  width: var(--slot-width);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
   height: 36px;
   padding-left: var(--slot-padding);
   padding-right: var(--slot-padding);
@@ -38,7 +38,10 @@
   & > .arrowControl {
     height: 100%;
     min-width: 36px;
-    flex: 1;
+
+    &:first-child {
+      grid-column: 2;
+    }
   }
 }
 
@@ -57,6 +60,12 @@
   padding: 0;
   touch-action: manipulation;
 
+  & > svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+  }
+
   &:focus-visible {
     outline: 0;
     box-shadow: var(--slot-focus-ring, #{$input-btn-focus-box-shadow});
@@ -68,8 +77,8 @@
     --slot-display-surface,
     var(--slot-bg-color, var(--bs-dark, #212529))
   );
-  display: inline-block;
-  width: var(--slot-width);
+  display: block;
+  width: 100%;
   padding: var(--slot-padding);
   border-radius: 0;
   position: relative;
@@ -77,14 +86,25 @@
   touch-action: none;
 
   & > svg {
-    width: calc(var(--slot-width) - var(--slot-padding) * 2);
+    display: block;
+    width: 100%;
+    height: auto;
     transform: skewX(-4deg);
 
     // digits background outlines
     &:first-child {
       position: absolute;
       top: var(--slot-padding);
+      right: var(--slot-padding);
+      left: var(--slot-padding);
+      width: auto;
       opacity: 0.7;
+      z-index: 0;
+    }
+
+    &:last-child {
+      position: relative;
+      z-index: 1;
     }
 
     polygon {
